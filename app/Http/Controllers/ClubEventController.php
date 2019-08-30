@@ -13,6 +13,7 @@ use Input;
 use Lara\Club;
 use Lara\ClubEvent;
 use Lara\Console\Commands\SyncBDclub;
+use Lara\Events\ClubEventCreatedEvent;
 use Lara\Http\Middleware\RejectGuests;
 use Lara\Role;
 use Lara\ShiftType;
@@ -187,7 +188,7 @@ class ClubEventController extends Controller
      * Store a newly created resource in storage.
      * Create a new event with schedule and write it to the database.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -205,7 +206,6 @@ class ClubEventController extends Controller
         $newSchedule = (new ScheduleController)->update(null);
         $newSchedule->evnt_id = $newEvent->id;
 
-
         $newSchedule->save();
 
         ScheduleController::createShifts($newSchedule);
@@ -216,6 +216,8 @@ class ClubEventController extends Controller
             $newEvent->template_id = $template->id;
             $newEvent->save();
         }
+
+        event(new ClubEventCreatedEvent($newEvent));
 
         // show new event
         return Redirect::action('ClubEventController@show', array('id' => $newEvent->id));
